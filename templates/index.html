@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự đoán nấm ăn được hay không</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.6/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div id="root"></div>
+    <script type="text/babel">
+        const odorValues = {
+            "a": "a - hạnh nhân (almond)",
+            "l": "l - hồi (anise)",
+            "c": "c - creosote (nhựa gỗ)",
+            "y": "y - cá (fishy)",
+            "f": "f - hôi (foul)",
+            "m": "m - mốc (musty)",
+            "n": "n - không mùi (none)",
+            "p": "p - cay (pungent)",
+            "s": "s - cay nồng (spicy)"
+        };
+
+        const capColorValues = {
+            "n": "n - nâu (brown)",
+            "b": "b - be (buff)",
+            "c": "c - quế (cinnamon)",
+            "g": "g - xám (gray)",
+            "r": "r - xanh lục (green)",
+            "p": "p - hồng (pink)",
+            "u": "u - tím (purple)",
+            "e": "e - đỏ (red)",
+            "w": "w - trắng (white)",
+            "y": "y - vàng (yellow)"
+        };
+
+        const gillColorValues = {
+            "k": "k - đen (black)",
+            "n": "n - nâu (brown)",
+            "b": "b - be (buff)",
+            "h": "h - chocolate",
+            "g": "g - xám (gray)",
+            "r": "r - xanh lục (green)",
+            "o": "o - cam (orange)",
+            "p": "p - hồng (pink)",
+            "u": "u - tím (purple)",
+            "e": "e - đỏ (red)",
+            "w": "w - trắng (white)",
+            "y": "y - vàng (yellow)"
+        };
+
+        function App() {
+            const [odor, setOdor] = React.useState("");
+            const [capColor, setCapColor] = React.useState("");
+            const [gillColor, setGillColor] = React.useState("");
+            const [prediction, setPrediction] = React.useState(null);
+            const [error, setError] = React.useState(null);
+
+            const handlePredict = async () => {
+                if (!odor || !capColor || !gillColor) {
+                    setError("⚠️ Vui lòng chọn đầy đủ thông tin!");
+                    setPrediction(null);
+                    return;
+                }
+
+                const sample = {
+                    odor: odor.split(" - ")[0],
+                    "cap-color": capColor.split(" - ")[0],
+                    "gill-color": gillColor.split(" - ")[0]
+                };
+
+                try {
+                    const response = await axios.post('/predict', sample);
+                    setPrediction(response.data.result);
+                    setError(null);
+                } catch (err) {
+                    console.error("Lỗi khi gửi yêu cầu:", err);
+                    setError("⚠️ Không thể kết nối với server! Vui lòng kiểm tra server.");
+                    setPrediction(null);
+                }
+            };
+
+            return (
+                <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                    <h1 className="text-2xl font-bold text-center mb-6">🍄 Dự đoán nấm ăn được hay không</h1>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Mùi (odor):</label>
+                        <select
+                            className="w-full p-2 border rounded"
+                            value={odor}
+                            onChange={(e) => setOdor(e.target.value)}
+                        >
+                            <option value="">Chọn mùi</option>
+                            {Object.values(odorValues).map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Màu mũ nấm (cap-color):</label>
+                        <select
+                            className="w-full p-2 border rounded"
+                            value={capColor}
+                            onChange={(e) => setCapColor(e.target.value)}
+                        >
+                            <option value="">Chọn màu mũ</option>
+                            {Object.values(capColorValues).map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Màu phiến nấm (gill-color):</label>
+                        <select
+                            className="w-full p-2 border rounded"
+                            value={gillColor}
+                            onChange={(e) => setGillColor(e.target.value)}
+                        >
+                            <option value="">Chọn màu phiến</option>
+                            {Object.values(gillColorValues).map((value) => (
+                                <option key={value} value={value}>{value}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <button
+                        className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                        onClick={handlePredict}
+                    >
+                        🔮 Dự đoán
+                    </button>
+                    {prediction && (
+                        <div className="mt-4 p-4 bg-gray-100 rounded text-center">
+                            <p className="text-lg">{prediction}</p>
+                        </div>
+                    )}
+                    {error && (
+                        <div className="mt-4 p-4 bg-red-100 rounded text-center">
+                            <p className="text-lg text-red-700">{error}</p>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+</body>
+</html>
